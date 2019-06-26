@@ -20,7 +20,9 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class App {	
-    private static String folderPath = "/home/flavia/Documents/athos/BASE XMLs";
+    private static final String N_NF = "nNF";
+	private static final String IDE = "ide";
+	private static String folderPath = "/home/flavia/Documents/athos/BASE XMLs";
     private static String reportsPath = "/home/flavia/Documents/athos/PLANILHAS";
 
     public static void main(String[] args) {
@@ -39,7 +41,7 @@ public class App {
                 Document doc = dBuilder.parse(f);
                 doc.getDocumentElement().normalize();
             
-                NodeList nodes = doc.getElementsByTagName("ide");
+                NodeList nodes = doc.getElementsByTagName(IDE);
 
                 for (int i = 0; i < nodes.getLength(); i++) {
                 Node node = nodes.item(i);
@@ -47,7 +49,7 @@ public class App {
                         Element element = (Element) node;
 
                         //ATRIBUIR VALORES AO OBJETO
-                        System.out.println("nNF " + getValue("nNF", element));
+                        System.out.println("nNF " + getValue(N_NF, element));
                     }
                 }
             }catch(Exception e){
@@ -81,6 +83,11 @@ public class App {
     static String getValue(String tag, Element element) {
         NodeList nodes = element.getElementsByTagName(tag).item(0).getChildNodes();
         Node node = (Node) nodes.item(0);
-        return node.getNodeValue();
+        StringBuilder name = new StringBuilder();
+        name.append(N_NF);
+        name.append(" ");
+        name.append(node.getNodeValue());
+        
+        return name.toString();
     }
 }
