@@ -25,44 +25,42 @@ public class App {
     private static final String DH_EMI = "dhEmi";
 	private static final String EMIT = "emit";
 	private static final String IDE = "ide";
-//	private static String folderPath = "/home/flavia/Documents/athos/BASE XMLs";
-	private static String folderPath = "C:\\Users\\Phelipe\\Desktop\\Teste";
-//    private static String reportsPath = "/home/flavia/Documents/athos/PLANILHAS";
-    private static String reportsPath = "C:\\Users\\Phelipe\\Desktop\\Teste\\BASE XMLs";
+	private static String folderPath = "/home/flavia/Documents/athos/PLANILHAS";
+	// private static String folderPath = "C:\\Users\\Phelipe\\Desktop\\Teste";
+   private static String reportsPath = "/home/flavia/Documents/athos/BASE XMLs";
+    // private static String reportsPath = "C:\\Users\\Phelipe\\Desktop\\Teste\\BASE XMLs";
     
     
     public static void main(String[] args) {
         try{
         	List<Report> reports = builderReports();
         	XSSFWorkbook workbook = new XSSFWorkbook();
+        	XSSFSheet sheet = workbook.createSheet("XML_FILES");
+        	int rowCount = 0;
         	
-        	reports.stream().forEach(report -> {
-	        	int rowCount = 0; 
-	            XSSFSheet sheet = workbook.createSheet("XML_FILES");
-	            XSSFRow row = sheet.createRow(++rowCount);                
+        	for (Report report : reports) {
+        		XSSFRow row = sheet.createRow(++rowCount);                
 	            int columnCount = 0;   
-	            
-	            Iterable<Report> iterableReport = Arrays.asList(report);
-	            for (Object field : iterableReport) {
-	                XSSFCell cell = row.createCell(++columnCount);
-	                if (field instanceof String) {
-	                    cell.setCellValue((String) field);
-	                }
-	            }
+	            XSSFCell cell = row.createCell(++columnCount);
+	            cell.setCellValue(report.cnpj);
+	            XSSFCell cell2 = row.createCell(++columnCount);
+	            cell2.setCellValue(report.dVenc);
 	         
-	            try (FileOutputStream outputStream = new FileOutputStream("XMLFile.xlsx")) {
+	            try (FileOutputStream outputStream = new FileOutputStream(folderPath + "/XMLFile.xlsx")) {
 	                workbook.write(outputStream);
 	            }catch(Exception ex){
 	                System.out.println(ex);
 	            }
 		        
-        	});
+        	};
         	
         	closeWorkBookSession(workbook);
         	
         }catch(Exception e){
             e.printStackTrace();
         }  
+        
+        System.out.println("FIM da execução");
     }
 
 	private static void closeWorkBookSession(XSSFWorkbook workbook) {
@@ -131,8 +129,12 @@ public class App {
 	}
     
 	static String getValue(String tag, Element element) {
-        NodeList nodes = element.getElementsByTagName(tag).item(0).getChildNodes();
-        Node node = (Node) nodes.item(0);
-        return node.getNodeValue();
+		try {
+	        NodeList nodes = element.getElementsByTagName(tag).item(0).getChildNodes();
+	        Node node = (Node) nodes.item(0);
+	        return node.getNodeValue().equals("") ? "Não encontrado" : node.getNodeValue();
+		}catch (Exception e) {
+			return "Não encontrado";
+		}
     }
 }
