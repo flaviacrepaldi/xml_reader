@@ -1,4 +1,7 @@
-package com.reader.athos;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -6,35 +9,54 @@ import java.util.Date;
 
 public class Report {
 	private static final String DEFAULT_PATTERN_TO_PARSE = "yyyy-MM-dd'T'HH:mm:ssX";
-	String cnpj;
-	Object dhEmi;
-	String xNome;
-	String nFat;
-	String vOrig;
-	String vDesc;
-	String vLiq;
-	String nDup;
-	String dVenc;
-	String vDup;
-	String indPag;
-	String tPag;
-	String vPag;
-	String status;
+	
+    private String cnpj;
+    private Object dhEmi; 
+    private String xNome;
+    private String nFat;
+    private String vOrig;
+    private String vDesc;
+    private String vLiq;
+    private List<Duplicata> duplicatas = new ArrayList<Duplicata>();
+    private String indPag;
+    private String tPag;
+    private String vPag;
+    private String status;
+    private String cnpjNodes;
+    
+    
+    public List<Duplicata> getDuplicatas() {
+		return Optional.ofNullable(this.duplicatas).orElse(new ArrayList<Duplicata>());
+	}
+    
+    public void addDuplicata(Duplicata duplicata) {
+    	getDuplicatas().add(duplicata);
+    }
 
-	public String setPaymentType(int type) {
-		switch (type) {
-		case 1:
-			return "Prazo";
-		case 0:
-			return "Vista";
-		case 2:
-			return "Outros";
+	public String getPaymentType(){
+		if(this.getIndPag() != "Não encontrado") {
+			switch(this.getIndPag()){
+	            case "1":
+	                return "Prazo"; 
+	            case "0":
+	                return "Vista";
+	            case "2":
+	                return "Outros";
+			}
 		}
-		return "";
+		return "Não encontrado";
+    }
+
+    public String changeDateFormat (String dVenc){
+        return dVenc.replace("-", "/");
+    }
+    
+    public String getCnpjNodes() {
+		return cnpjNodes;
 	}
 
-	public String changeDateFormat(String dVenc) {
-		return dVenc.replace("-", "/");
+	public void setCnpjNodes(String cnpjNodes) {
+		this.cnpjNodes = cnpjNodes;
 	}
 
 	public String getCnpj() {
@@ -105,30 +127,6 @@ public class Report {
 
 	public void setvLiq(String vLiq) {
 		this.vLiq = vLiq;
-	}
-
-	public String getnDup() {
-		return nDup;
-	}
-
-	public void setnDup(String nDup) {
-		this.nDup = nDup;
-	}
-
-	public String getdVenc() {
-		return dVenc;
-	}
-
-	public void setdVenc(String dVenc) {
-		this.dVenc = dVenc;
-	}
-
-	public String getvDup() {
-		return vDup;
-	}
-
-	public void setvDup(String vDup) {
-		this.vDup = vDup;
 	}
 
 	public String getIndPag() {
