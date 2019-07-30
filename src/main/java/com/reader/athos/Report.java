@@ -1,36 +1,41 @@
 package com.reader.athos;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 public class Report {
-    String cnpj;
-    Object dhEmi; 
-    String xNome;
-    String nFat;
-    String vOrig;
-    String vDesc;
-    String vLiq;
-    String nDup;
-    String dVenc;
-    String vDup;
-    String indPag;
-    String tPag;
-    String vPag;
-    String status;
+	private static final String DEFAULT_PATTERN_TO_PARSE = "yyyy-MM-dd'T'HH:mm:ssX";
+	String cnpj;
+	Object dhEmi;
+	String xNome;
+	String nFat;
+	String vOrig;
+	String vDesc;
+	String vLiq;
+	String nDup;
+	String dVenc;
+	String vDup;
+	String indPag;
+	String tPag;
+	String vPag;
+	String status;
 
-    public String setPaymentType (int type){
-        switch(type){
-            case 1:
-                return "Prazo";
-            case 0:
-                return "Vista";
-            case 2:
-                return "Outros";
-        }
-        return "";
-    }
+	public String setPaymentType(int type) {
+		switch (type) {
+		case 1:
+			return "Prazo";
+		case 0:
+			return "Vista";
+		case 2:
+			return "Outros";
+		}
+		return "";
+	}
 
-    public String changeDateFormat (String dVenc){
-        return dVenc.replace("-", "/");
-    }
+	public String changeDateFormat(String dVenc) {
+		return dVenc.replace("-", "/");
+	}
 
 	public String getCnpj() {
 		return cnpj;
@@ -42,6 +47,20 @@ public class Report {
 
 	public Object getDhEmi() {
 		return dhEmi;
+	}
+
+	public Date convertDhEmiInDate() {
+		// formato padrao de data recebido 2019-05-31T15:41:47-03:00
+		
+		Date date = null;
+		try {
+			SimpleDateFormat formatter = new SimpleDateFormat(DEFAULT_PATTERN_TO_PARSE);
+			date = formatter.parse(getDhEmi().toString());
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+
+		return date;
 	}
 
 	public void setDhEmi(Object dhEmi) {
@@ -143,5 +162,5 @@ public class Report {
 	public void setvPag(String vPag) {
 		this.vPag = vPag;
 	}
-   
+
 }

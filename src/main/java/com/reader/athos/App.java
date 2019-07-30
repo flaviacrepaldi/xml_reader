@@ -5,7 +5,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -33,7 +36,9 @@ public class App {
     
     public static void main(String[] args) {
         try{
-        	List<Report> reports = builderReports();
+        	List<Report> reports = builderReports().stream().sorted(Comparator.comparing(Report::convertDhEmiInDate)).collect(Collectors.toList());
+        	
+        	
         	XSSFWorkbook workbook = new XSSFWorkbook();
         	
         	reports.stream().forEach(report -> {
@@ -131,8 +136,14 @@ public class App {
 	}
     
 	static String getValue(String tag, Element element) {
-        NodeList nodes = element.getElementsByTagName(tag).item(0).getChildNodes();
-        Node node = (Node) nodes.item(0);
-        return node.getNodeValue();
+		Node tagElement = element.getElementsByTagName(tag).item(0);
+		
+		if(Objects.nonNull(tagElement)){
+			NodeList childNodes = tagElement.getChildNodes();
+			Node node = childNodes.item(0);
+			return node.getNodeValue();
+		}
+		
+		return null;        
     }
 }
