@@ -1,6 +1,8 @@
+package com.reader.athos.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import java.text.ParseException;
@@ -12,6 +14,7 @@ public class Report {
 	
     private String cnpj;
     private Object dhEmi; 
+    private Date dateDhEmi;
     private String xNome;
     private String nFat;
     private String vOrig;
@@ -73,16 +76,21 @@ public class Report {
 
 	public Date convertDhEmiInDate() {
 		// formato padrao de data recebido 2019-05-31T15:41:47-03:00
-		
-		Date date = null;
-		try {
-			SimpleDateFormat formatter = new SimpleDateFormat(DEFAULT_PATTERN_TO_PARSE);
-			date = formatter.parse(getDhEmi().toString());
-		} catch (ParseException e) {
-			e.printStackTrace();
+		if (Objects.isNull(this.dateDhEmi)) {
+			try {
+				SimpleDateFormat formatter = new SimpleDateFormat(DEFAULT_PATTERN_TO_PARSE);
+				this.dateDhEmi = formatter.parse(getDhEmi().toString());
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
 		}
-
-		return date;
+		
+		return this.dateDhEmi;
+	}
+	
+	public String formmaterDhEmi() {
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+		return formatter.format(convertDhEmiInDate());
 	}
 
 	public void setDhEmi(Object dhEmi) {

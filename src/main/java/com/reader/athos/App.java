@@ -15,10 +15,11 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.lang3.time.StopWatch;
-import org.apache.poi.xssf.usermodel.XSSFCell;
-import org.apache.poi.xssf.usermodel.XSSFRow;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -32,16 +33,15 @@ public class App {
     private static final String DH_EMI = "dhEmi";
 	private static final String EMIT = "emit";
 	private static final String IDE = "ide";
-	private static String folderPath = "/home/flavia/Documents/athos/PLANILHAS";
-	// private static String folderPath = "C:\\Users\\Phelipe\\Desktop\\Teste";
-   private static String reportsPath = "/home/flavia/Documents/athos/BASE XMLs";
-    // private static String reportsPath = "C:\\Users\\Phelipe\\Desktop\\Teste\\BASE XMLs";
-   private static int rowCount = 0;    
+	//private static String folderPath = "/home/flavia/Documents/athos/PLANILHAS";
+	private static String folderPath = "C:\\Users\\Phelipe\\Desktop\\Teste";
+   //private static String reportsPath = "/home/flavia/Documents/athos/BASE XMLs";
+    private static String reportsPath = "C:\\Users\\Phelipe\\Desktop\\Teste\\BASE XMLs";
+    private static String lastDateVerified = null;
+    private static Workbook workbook;
     
     public static void main(String[] args) {
         try{
-        	
-        	
         	StopWatch monitorExecutionReports = new StopWatch();
         	monitorExecutionReports.start();
         	List<Report> reports = builderReports().stream().sorted(Comparator.comparing(Report::convertDhEmiInDate)).collect(Collectors.toList());
@@ -50,41 +50,56 @@ public class App {
         	
         	System.out.println("Inserindo dados na planilha...");
         	StopWatch monitorWritingExcel = new StopWatch();
-        	monitorWritingExcel.start();
-        	
-        	XSSFWorkbook workbook = new XSSFWorkbook();
-        	XSSFSheet sheet = workbook.createSheet("XML_FILES");
+        	monitorWritingExcel.start();	
         	
         	for (Report report : reports) {
- 
-	            report.getDuplicatas().stream().forEach(duplicata -> {
-	            	
-	            	XSSFRow row = createNewRow(sheet);
-	            	int columnCount = 0;
-	            	writingCell(row, report.getCnpj(), ++columnCount);
-	            	writingCell(row, report.getxNome(), ++columnCount);
-	            	writingCell(row, report.getnFat(), ++columnCount);
-	            	writingCell(row, report.getvOrig(), ++columnCount);
-	            	writingCell(row, report.getvDesc(), ++columnCount);
-	            	writingCell(row, report.getvLiq(), ++columnCount);
-	            	writingCell(row, duplicata.getnDup(), ++columnCount);
-	            	writingCell(row, duplicata.getdVenc(), ++columnCount);
-	            	writingCell(row, duplicata.getvDup(), ++columnCount);
-	            	writingCell(row, report.getPaymentType(), ++columnCount);
-           	
-	            });
-	     
-	            try (FileOutputStream outputStream = new FileOutputStream(folderPath + "/XMLFile.xlsx")) {
-	                workbook.write(outputStream);
-	            }catch(Exception ex){
-	                System.out.println(ex);
-	            }
+        		if (report.getDuplicatas().size() >= 1) {
+        			for (Duplicata duplicata : report.getDuplicatas()) {
+        				
+        				setSXSSFWorkbook(report.formmaterDhEmi());
+        				lastDateVerified = report.formmaterDhEmi();
+        				
+        				Sheet sheet = getXMLFileSheet();
+        				
+        				System.out.println("inserindo cnpj -> "+ report.getCnpj());
+        				Row row = createNewRow(sheet);
+        				int columnCount = 0;
+        				writingCell(row, report.getCnpj(), columnCount);
+        				writingCell(row, report.getxNome(), ++columnCount);
+        				writingCell(row, report.getnFat(), ++columnCount);
+        				writingCell(row, report.getvOrig(), ++columnCount);
+        				writingCell(row, report.getvDesc(), ++columnCount);
+        				writingCell(row, report.getvLiq(), ++columnCount);
+        				writingCell(row, duplicata.getnDup(), ++columnCount);
+        				writingCell(row, duplicata.getdVenc(), ++columnCount);
+        				writingCell(row, duplicata.getvDup(), ++columnCount);
+        				writingCell(row, report.getPaymentType(), ++columnCount);
+        			}
+        		} else {
+        			setSXSSFWorkbook(report.formmaterDhEmi());
+    				lastDateVerified = report.formmaterDhEmi();
+    				
+    				Sheet sheet = getXMLFileSheet();
+    				
+    				System.out.println("inserindo cnpj -> "+ report.getCnpj());
+    				Row row = createNewRow(sheet);
+    				int columnCount = 0;
+    				writingCell(row, report.getCnpj(), columnCount);
+    				writingCell(row, report.getxNome(), ++columnCount);
+    				writingCell(row, report.getnFat(), ++columnCount);
+    				writingCell(row, report.getvOrig(), ++columnCount);
+    				writingCell(row, report.getvDesc(), ++columnCount);
+    				writingCell(row, report.getvLiq(), ++columnCount);
+    				writingCell(row, "N/D", ++columnCount);
+    				writingCell(row, "N/D", ++columnCount);
+    				writingCell(row, "N/D", ++columnCount);
+    				writingCell(row, report.getPaymentType(), ++columnCount);
+        			
+        		}
+        		writeSpreadsheetWithSameDateOfReport(report.formmaterDhEmi());
         	};
         	monitorWritingExcel.stop();
         	System.out.println("Tempo de escrita na planilha: " + monitorWritingExcel.getTime() + "ms");
-        	
-        	closeWorkBookSession(workbook);
-        	
         }catch(Exception e){
             e.printStackTrace();
         }  
@@ -92,19 +107,61 @@ public class App {
         System.out.println("FIM da execução");
     }
 
-	private static void writingCell(XSSFRow row, String value, int columnCount) {
-		XSSFCell cell = row.createCell(columnCount);
+	private static Sheet getXMLFileSheet() {
+		 if (workbook.getSheet("XML_FILES") == null) {
+			 return workbook.createSheet("XML_FILES");
+		 } else {
+			 return workbook.getSheet("XML_FILES");
+		 }
+	}
+
+	private static void setSXSSFWorkbook(String formmaterDhEmi) {
+		if (! formmaterDhEmi.equals(lastDateVerified)) {
+			System.out.println("vai dar new");
+			closeWorkBookSession();
+			workbook = new SXSSFWorkbook();
+		}
+	}
+	
+	private static void writeSpreadsheetWithSameDateOfReport(String formaterDhEmiInDate) {
+		StringBuilder fileCompletePath = new StringBuilder();
+		fileCompletePath.append(folderPath);
+		fileCompletePath.append("\\");
+		fileCompletePath.append(formaterDhEmiInDate);
+		fileCompletePath.append(".xlsx");
+		
+		try  {
+			
+			File f = new File(fileCompletePath.toString());
+			if (! f.exists()) {
+				System.out.println("Criando planilha " + formaterDhEmiInDate + ".xlsx");
+				f.createNewFile();
+			}
+
+			 FileOutputStream outputStream = new FileOutputStream(fileCompletePath.toString());
+             workbook.write(outputStream);
+             outputStream.flush();
+             outputStream.close();
+         }catch(Exception ex){
+             System.out.println(ex);
+         }
+	}
+
+	private static void writingCell(Row row, String value, int columnCount) {
+		Cell cell = row.createCell(columnCount);
     	cell.setCellValue(value);
 	}
 
-	private static XSSFRow createNewRow(XSSFSheet sheet) {
-		XSSFRow row = sheet.createRow(++rowCount);
+	private static Row createNewRow(Sheet sheet) {
+		System.out.println("na linha -> " + (sheet.getLastRowNum() + 1));
+		Row row = sheet.createRow(sheet.getLastRowNum() + 1); 
 		return row;
 	}
 
-	private static void closeWorkBookSession(XSSFWorkbook workbook) {
+	private static void closeWorkBookSession() {
 		try {
-		    workbook.close();
+		    if (Objects.nonNull(workbook)) 
+		    	workbook.close();
 		} catch (IOException e) {
 		   e.printStackTrace();
 		}
@@ -194,4 +251,6 @@ public class App {
 		
 		return "Não encontrado";
     }
+	
+	
 }
