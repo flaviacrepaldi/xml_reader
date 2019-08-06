@@ -35,6 +35,10 @@ public class Report {
     public void addDuplicata(Duplicata duplicata) {
     	getDuplicatas().add(duplicata);
     }
+    
+    public boolean hasDuplicatas() {
+    	return !getDuplicatas().isEmpty();
+    }
 
 	public String getPaymentType(){
 		if(this.getIndPag() != "Não encontrado") {

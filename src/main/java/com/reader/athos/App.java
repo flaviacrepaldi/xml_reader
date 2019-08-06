@@ -5,8 +5,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -33,71 +34,39 @@ public class App {
     private static final String DH_EMI = "dhEmi";
 	private static final String EMIT = "emit";
 	private static final String IDE = "ide";
-	//private static String folderPath = "/home/flavia/Documents/athos/PLANILHAS";
-	private static String folderPath = "C:\\Users\\Phelipe\\Desktop\\Teste";
-   //private static String reportsPath = "/home/flavia/Documents/athos/BASE XMLs";
-    private static String reportsPath = "C:\\Users\\Phelipe\\Desktop\\Teste\\BASE XMLs";
-    private static String lastDateVerified = null;
-    private static Workbook workbook;
+//	private static String folderPath = "/home/flavia/Documents/athos/PLANILHAS";
+//	private static String folderPath = "C:\\Users\\Phelipe\\Desktop\\Teste";
+	private static String folderPath = "C:\\Users\\phelipe.galiotti\\Desktop\\teste";
+//  private static String reportsPath = "/home/flavia/Documents/athos/BASE XMLs";
+//  private static String reportsPath = "C:\\Users\\Phelipe\\Desktop\\Teste\\BASE XMLs";
+    private static String reportsPath = "C:\\Users\\phelipe.galiotti\\Desktop\\teste\\BASE XMLs";
+    
+//    private static String lastDateVerified = null;
+//    private static Workbook workbook;
     
     public static void main(String[] args) {
         try{
         	StopWatch monitorExecutionReports = new StopWatch();
         	monitorExecutionReports.start();
-        	List<Report> reports = builderReports().stream().sorted(Comparator.comparing(Report::convertDhEmiInDate)).collect(Collectors.toList());
+//        	List<Report> reports = builderReports().stream()
+//        			.sorted(Comparator.comparing(Report::convertDhEmiInDate))
+//        			.collect(Collectors.toList());
+        	
+        	Map<String, List<Report>> collect = builderReports().stream().collect(Collectors.groupingBy(Report::formmaterDhEmi));
+        	
         	monitorExecutionReports.stop();
         	System.out.println("Tempo de leitura dos XMLs: " + monitorExecutionReports.getTime() + "ms");
         	
         	System.out.println("Inserindo dados na planilha...");
         	StopWatch monitorWritingExcel = new StopWatch();
         	monitorWritingExcel.start();	
-        	
-        	for (Report report : reports) {
-        		if (report.getDuplicatas().size() >= 1) {
-        			for (Duplicata duplicata : report.getDuplicatas()) {
-        				
-        				setSXSSFWorkbook(report.formmaterDhEmi());
-        				lastDateVerified = report.formmaterDhEmi();
-        				
-        				Sheet sheet = getXMLFileSheet();
-        				
-        				System.out.println("inserindo cnpj -> "+ report.getCnpj());
-        				Row row = createNewRow(sheet);
-        				int columnCount = 0;
-        				writingCell(row, report.getCnpj(), columnCount);
-        				writingCell(row, report.getxNome(), ++columnCount);
-        				writingCell(row, report.getnFat(), ++columnCount);
-        				writingCell(row, report.getvOrig(), ++columnCount);
-        				writingCell(row, report.getvDesc(), ++columnCount);
-        				writingCell(row, report.getvLiq(), ++columnCount);
-        				writingCell(row, duplicata.getnDup(), ++columnCount);
-        				writingCell(row, duplicata.getdVenc(), ++columnCount);
-        				writingCell(row, duplicata.getvDup(), ++columnCount);
-        				writingCell(row, report.getPaymentType(), ++columnCount);
-        			}
-        		} else {
-        			setSXSSFWorkbook(report.formmaterDhEmi());
-    				lastDateVerified = report.formmaterDhEmi();
-    				
-    				Sheet sheet = getXMLFileSheet();
-    				
-    				System.out.println("inserindo cnpj -> "+ report.getCnpj());
-    				Row row = createNewRow(sheet);
-    				int columnCount = 0;
-    				writingCell(row, report.getCnpj(), columnCount);
-    				writingCell(row, report.getxNome(), ++columnCount);
-    				writingCell(row, report.getnFat(), ++columnCount);
-    				writingCell(row, report.getvOrig(), ++columnCount);
-    				writingCell(row, report.getvDesc(), ++columnCount);
-    				writingCell(row, report.getvLiq(), ++columnCount);
-    				writingCell(row, "N/D", ++columnCount);
-    				writingCell(row, "N/D", ++columnCount);
-    				writingCell(row, "N/D", ++columnCount);
-    				writingCell(row, report.getPaymentType(), ++columnCount);
-        			
-        		}
-        		writeSpreadsheetWithSameDateOfReport(report.formmaterDhEmi());
-        	};
+        	for(Entry<String, List<Report>> entry : collect.entrySet()) {
+        		//A data
+        		String data = entry.getKey();
+        		//Os registros agrupados por data
+        		List<Report> reports = entry.getValue();
+        		insertReportsToWorkbook(data, reports);
+        	}
         	monitorWritingExcel.stop();
         	System.out.println("Tempo de escrita na planilha: " + monitorWritingExcel.getTime() + "ms");
         }catch(Exception e){
@@ -107,34 +76,88 @@ public class App {
         System.out.println("FIM da execução");
     }
 
-	private static Sheet getXMLFileSheet() {
-		 if (workbook.getSheet("XML_FILES") == null) {
-			 return workbook.createSheet("XML_FILES");
-		 } else {
-			 return workbook.getSheet("XML_FILES");
-		 }
+	private static void insertReportsToWorkbook(String dhEmiDateFormatted, List<Report> reports) {
+		SXSSFWorkbook workbook = new SXSSFWorkbook();
+		Sheet sheet = workbook.createSheet("XML_FILES");
+		int columnCount = 0;
+		
+		//Crie o arquivo 
+		for (Report report : reports) {
+			System.out.println("inserindo cnpj -> "+ report.getCnpj());
+			if (report.hasDuplicatas()) {
+				insertReportsWithDuplicatas(report, sheet, columnCount);
+			} else {
+				insertReports(report, sheet, columnCount);
+			}
+		}
+		
+		writeSpreadsheetWithSameDateOfReport(dhEmiDateFormatted, workbook);
+		closeWorkBookSession(workbook);
 	}
 
-	private static void setSXSSFWorkbook(String formmaterDhEmi) {
-		if (! formmaterDhEmi.equals(lastDateVerified)) {
-			System.out.println("vai dar new");
-			closeWorkBookSession();
-			workbook = new SXSSFWorkbook();
-		}
+	private static void insertReports(Report report, Sheet sheet, int columnCount) {
+		Row row = createNewRow(sheet);	
+		writingCell(row, report.getCnpj(), columnCount++);
+		writingCell(row, report.getxNome(), columnCount++);
+		writingCell(row, report.getnFat(), columnCount++);
+		writingCell(row, report.getvOrig(), columnCount++);
+		writingCell(row, report.getvDesc(), columnCount++);
+		writingCell(row, report.getvLiq(), columnCount++);
+		writingCell(row, "N/A não há duplicata", columnCount++);
+		writingCell(row, "N/A não há duplicata", columnCount++);
+		writingCell(row, "N/A não há duplicata", columnCount++);
+		writingCell(row, report.getPaymentType(), columnCount++);
 	}
+
+	private static void insertReportsWithDuplicatas(Report report, Sheet sheet, int columnCount) {
+		System.out.println("Tem "+ report.getDuplicatas().size() + " duplicatas");
+		Row row = createNewRow(sheet);			
+		for (Duplicata duplicata : report.getDuplicatas()) {
+			writingCell(row, report.getCnpj(), columnCount++);
+			writingCell(row, report.getxNome(), columnCount++);
+			writingCell(row, report.getnFat(), columnCount++);
+			writingCell(row, report.getvOrig(), columnCount++);
+			writingCell(row, report.getvDesc(), columnCount++);
+			writingCell(row, report.getvLiq(), columnCount++);
+			writingCell(row, duplicata.getnDup(), columnCount++);
+			writingCell(row, duplicata.getdVenc(), columnCount++);
+			writingCell(row, duplicata.getvDup(), columnCount++);
+			writingCell(row, report.getPaymentType(), columnCount++);
+		}
+		
+	}
+
+//	private static void setNewLastDateVerified(String formmaterDhEmiDate) {
+//		lastDateVerified = formmaterDhEmiDate;
+//	}
+
+//	private static Sheet getXMLFileSheet() {
+//		 if (Objects.isNull(workbook.getSheet("XML_FILES"))) {
+//		 } else {
+//			 return workbook.createSheet("XML_FILES");
+//			 return workbook.getSheet("XML_FILES");
+//		 }
+//	}
+//
+//	private static void setSXSSFWorkbook(String formmaterDhEmi) {
+//		if (! formmaterDhEmi.equals(lastDateVerified)) {
+//			System.out.println("vai dar new");
+//			closeWorkBookSession();
+//			workbook = new SXSSFWorkbook();
+//		}
+//	}
 	
-	private static void writeSpreadsheetWithSameDateOfReport(String formaterDhEmiInDate) {
+	private static void writeSpreadsheetWithSameDateOfReport(String dhEmiDateFormatted, Workbook workbook) {
 		StringBuilder fileCompletePath = new StringBuilder();
 		fileCompletePath.append(folderPath);
 		fileCompletePath.append("\\");
-		fileCompletePath.append(formaterDhEmiInDate);
+		fileCompletePath.append(dhEmiDateFormatted);
 		fileCompletePath.append(".xlsx");
 		
 		try  {
-			
 			File f = new File(fileCompletePath.toString());
 			if (! f.exists()) {
-				System.out.println("Criando planilha " + formaterDhEmiInDate + ".xlsx");
+				System.out.println("Criando planilha " + dhEmiDateFormatted + ".xlsx");
 				f.createNewFile();
 			}
 
@@ -158,7 +181,7 @@ public class App {
 		return row;
 	}
 
-	private static void closeWorkBookSession() {
+	private static void closeWorkBookSession(Workbook workbook) {
 		try {
 		    if (Objects.nonNull(workbook)) 
 		    	workbook.close();
@@ -177,27 +200,38 @@ public class App {
 		Arrays.asList(fileReportsPath.listFiles()).stream().forEach(file -> { 
             System.out.println("Lendo o arquivo -> " + file.getName());
             
-		    Document doc = parseDocument(dBuilder, file);
-		    doc.getDocumentElement().normalize();
+            if (hasPermitedExtension(file)) {
+			    Document doc = parseDocument(dBuilder, file);
+			    doc.getDocumentElement().normalize();
+			    
+			    Report report = new Report();
+			    report.setDhEmi(getValueElementsByTagName(doc, IDE, DH_EMI));
+			    report.setCnpj(getValueElementsByTagName(doc, EMIT, "CNPJ"));
+			    report.setxNome(getValueElementsByTagName(doc, EMIT, "xNome"));
+			    report.setnFat(getValueElementsByTagName(doc, "fat", "nFat"));
+			    report.setvOrig(getValueElementsByTagName(doc, "fat", "vOrig"));
+			    report.setvDesc(getValueElementsByTagName(doc, "fat", "vDesc"));
+			    report.setvLiq(getValueElementsByTagName(doc, "fat", "vLiq"));
+			    report.setIndPag(getValueElementsByTagName(doc, "detPag", "indPag"));
+			    report.settPag(getValueElementsByTagName(doc, "detPag", "tPag"));
+			    report.setvPag(getValueElementsByTagName(doc, "detPag", "vPag"));
+			    
+			    builderDuplicatas(report, doc);
 		    
-		    Report report = new Report();
-		    report.setDhEmi(getValueElementsByTagName(doc, IDE, DH_EMI));
-		    report.setCnpj(getValueElementsByTagName(doc, EMIT, "CNPJ"));
-		    report.setxNome(getValueElementsByTagName(doc, EMIT, "xNome"));
-		    report.setnFat(getValueElementsByTagName(doc, "fat", "nFat"));
-		    report.setvOrig(getValueElementsByTagName(doc, "fat", "vOrig"));
-		    report.setvDesc(getValueElementsByTagName(doc, "fat", "vDesc"));
-		    report.setvLiq(getValueElementsByTagName(doc, "fat", "vLiq"));
-		    report.setIndPag(getValueElementsByTagName(doc, "detPag", "indPag"));
-		    report.settPag(getValueElementsByTagName(doc, "detPag", "tPag"));
-		    report.setvPag(getValueElementsByTagName(doc, "detPag", "vPag"));
-		    
-		    builderDuplicatas(report, doc);
-	    
-		    reports.add(report);
+			    reports.add(report);
+            }
 		});
 		
 		return reports;
+	}
+
+	private static boolean hasPermitedExtension(File file) {
+		if (file.getName().contains(".xml")) {
+			return true;
+		} else {
+			System.out.println("Erro! A extensão do arquivo '" + file.getName() + "' não é permitida. Extensões permitidas (.xml)");
+			return false; 
+		}
 	}
 
 	private static void builderDuplicatas(Report report, Document doc) {
