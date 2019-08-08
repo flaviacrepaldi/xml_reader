@@ -2,7 +2,6 @@ package com.reader.athos;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,19 +20,24 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import com.reader.athos.model.Config;
 import com.reader.athos.model.Duplicata;
 import com.reader.athos.model.Report;
+import com.reader.athos.service.BuilderConfigProperties;
 import com.reader.athos.service.BuilderReports;
 
 public class App {	
-private static final String XML_FILES = "XML_FILES";
+	private static Config config;
+	private static final String XML_FILES = "XML_FILES";
+	
 //	private static String folderPath = "/home/flavia/Documents/athos/PLANILHAS";
-	private static String folderPath = "C:\\Users\\Phelipe\\Desktop\\Teste";
+//	private static String folderPath = "C:\\Users\\Phelipe\\Desktop\\Teste";
 //	private static String folderPath = "C:\\Users\\phelipe.galiotti\\Desktop\\teste";
     
     public static void main(String[] args) {
         try{
-        	Map<String, List<Report>> reportsOrderByDhEmiDate = BuilderReports.builderReports().stream().collect(Collectors.groupingBy(Report::formmaterDhEmi));
+        	config = BuilderConfigProperties.execute();
+        	Map<String, List<Report>> reportsOrderByDhEmiDate = BuilderReports.builderReports(config).stream().collect(Collectors.groupingBy(Report::formmaterDhEmi));
 
         	System.out.println("Inserindo dados...");
         	StopWatch monitorWritingExcel = new StopWatch();
@@ -145,7 +149,7 @@ private static final String XML_FILES = "XML_FILES";
 	
 	private static String generateCompletePathToSave(String dhEmiDateFormatted){
 		StringBuilder fileCompletePath = new StringBuilder();
-		fileCompletePath.append(folderPath);
+		fileCompletePath.append(config.getFolderPath());
 		fileCompletePath.append("\\");
 		fileCompletePath.append(dhEmiDateFormatted);
 		fileCompletePath.append(".xlsx");

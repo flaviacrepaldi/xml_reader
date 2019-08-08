@@ -18,11 +18,11 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import com.reader.athos.model.Config;
 import com.reader.athos.model.Duplicata;
 import com.reader.athos.model.Report;
 
 public class BuilderReports {
-	// constantes
 	private static final String DUP = "dup";
 	private static final String DET_PAG = "detPag";
 	private static final String FAT = "fat";
@@ -30,15 +30,15 @@ public class BuilderReports {
 	private static final String IDE = "ide";
 	
 //  private static String reportsPath = "/home/flavia/Documents/athos/BASE XMLs";
-  private static String reportsPath = "C:\\Users\\Phelipe\\Desktop\\Teste\\BASE XMLs";
-//    private static String reportsPath = "C:\\Users\\phelipe.galiotti\\Desktop\\teste\\BASE XMLs";
+//  private static String reportsPath = "C:\\Users\\Phelipe\\Desktop\\Teste\\BASE XMLs";
+//  private static String reportsPath = "C:\\Users\\phelipe.galiotti\\Desktop\\teste\\BASE XMLs";
 	
 	
-	public static List<Report> builderReports() throws ParserConfigurationException, SAXException, IOException {
+	public static List<Report> builderReports(Config config) throws ParserConfigurationException, SAXException, IOException {
 		StopWatch monitorExecutionReports = new StopWatch();
     	monitorExecutionReports.start();
 
-		File fileReportsPath = new File(reportsPath);
+		File fileReportsPath = new File(config.getTargetReportsPath());
 		List<Report> reports = new ArrayList<>();
 		
 		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
