@@ -30,8 +30,8 @@ public class BuilderReports {
 	private static final String IDE = "ide";
 	
 //  private static String reportsPath = "/home/flavia/Documents/athos/BASE XMLs";
-//  private static String reportsPath = "C:\\Users\\Phelipe\\Desktop\\Teste\\BASE XMLs";
-    private static String reportsPath = "C:\\Users\\phelipe.galiotti\\Desktop\\teste\\BASE XMLs";
+  private static String reportsPath = "C:\\Users\\Phelipe\\Desktop\\Teste\\BASE XMLs";
+//    private static String reportsPath = "C:\\Users\\phelipe.galiotti\\Desktop\\teste\\BASE XMLs";
 	
 	
 	public static List<Report> builderReports() throws ParserConfigurationException, SAXException, IOException {
