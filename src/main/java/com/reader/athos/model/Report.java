@@ -96,6 +96,11 @@ public class Report {
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
 		return formatter.format(convertDhEmiInDate());
 	}
+	
+	public String getYearByDhEmi() {
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy");
+		return formatter.format(convertDhEmiInDate());
+	}
 
 	public void setDhEmi(Object dhEmi) {
 		this.dhEmi = dhEmi;
