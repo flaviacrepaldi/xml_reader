@@ -55,6 +55,7 @@ public class BuilderReports {
 			    report.setDhEmi(getValueElementsByTagName(doc, IDE, "dhEmi"));
 			    report.setCnpj(getValueElementsByTagName(doc, EMIT, "CNPJ"));
 			    report.setxNome(getValueElementsByTagName(doc, EMIT, "xNome"));
+			    report.setNatOp(getValueElementsByTagName(doc, IDE, "natOp"));
 			    report.setnFat(getValueElementsByTagName(doc, FAT, "nFat"));
 			    report.setvOrig(getValueElementsByTagName(doc, FAT, "vOrig"));
 			    report.setvDesc(getValueElementsByTagName(doc, FAT, "vDesc"));

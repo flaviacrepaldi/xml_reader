@@ -16,6 +16,7 @@ public class Report {
     private Object dhEmi; 
     private Date dateDhEmi;
     private String xNome;
+    private String natOp;
     private String nFat;
     private String vOrig;
     private String vDesc;
@@ -178,4 +179,11 @@ public class Report {
 		this.vPag = vPag;
 	}
 
+	public String getNatOp() {
+		return natOp;
+	}
+
+	public void setNatOp(String natOp) {
+		this.natOp = natOp;
+	}
 }

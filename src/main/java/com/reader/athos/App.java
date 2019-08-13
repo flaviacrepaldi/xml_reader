@@ -37,15 +37,15 @@ public class App {
     public static void main(String[] args) {
         try{
         	config = BuilderConfigProperties.execute();
-        	Map<String, List<Report>> reportsOrderByDhEmiDate = BuilderReports.builderReports(config).stream().collect(Collectors.groupingBy(Report::formmaterDhEmi));
+        	Map<String, List<Report>> reportsOrderByDhEmiDate = BuilderReports.builderReports(config).stream().collect(Collectors.groupingBy(Report::getYearByDhEmi));
 
         	System.out.println("Inserindo dados...");
         	StopWatch monitorWritingExcel = new StopWatch();
         	monitorWritingExcel.start();	
         	for(Entry<String, List<Report>> entry : reportsOrderByDhEmiDate.entrySet()) {
-        		String dhEmiDateFormatted = entry.getKey();
-        		List<Report> reportsByDate = entry.getValue();
-        		insertReportsToWorkbook(dhEmiDateFormatted, reportsByDate);
+        		String dhEmiYear = entry.getKey();
+        		List<Report> reportsByYear = entry.getValue();
+        		insertReportsToWorkbook(dhEmiYear, reportsByYear);
         	}
         	monitorWritingExcel.stop();
         	System.out.println("Tempo de total de escrita: " + monitorWritingExcel.getTime() + "ms");
@@ -57,9 +57,9 @@ public class App {
         System.out.println("FIM DA EXECUÇÃO");
     }
 
-	private static void insertReportsToWorkbook(String dhEmiDateFormatted, List<Report> reports) throws IOException {
-		SXSSFWorkbook workbook = getWorkbook(dhEmiDateFormatted);
-		Sheet sheet = getSheet(workbook, dhEmiDateFormatted); 
+	private static void insertReportsToWorkbook(String dhEmiYear, List<Report> reports) throws IOException {
+		Workbook workbook = getWorkbook(dhEmiYear);
+		Sheet sheet = getSheet(workbook, dhEmiYear); 
 		int columnCount = 0;
 		
 		for (Report report : reports) {
@@ -71,22 +71,22 @@ public class App {
 		}
 		setAutoSizeToColumn(sheet);
 		
-		writeSpreadsheetWithSameDateOfReport(dhEmiDateFormatted, workbook);
+		writeSpreadsheetWithSameDateOfReport(dhEmiYear, workbook);
 		closeWorkBookSession(workbook);
 	}
 
-	private static Sheet getSheet(Workbook workbook, String dhEmiDateFormatted) {
-		if (xlsxFileExists(dhEmiDateFormatted)) {
+	private static Sheet getSheet(Workbook workbook, String dhEmiYear) {
+		if (xlsxFileExists(dhEmiYear)) {
 			return workbook.getSheet(XML_FILES);
 		} 
 		
 		return workbook.createSheet(XML_FILES);
 	}
 
-	private static SXSSFWorkbook getWorkbook(String dhEmiDateFormatted) throws IOException {
-		if (xlsxFileExists(dhEmiDateFormatted)) {
-			FileInputStream excelFile = new FileInputStream(new File(generateCompletePathToSave(dhEmiDateFormatted)));
-			return new SXSSFWorkbook(new XSSFWorkbook(excelFile));
+	private static Workbook getWorkbook(String dhEmiYear) throws IOException {
+		if (xlsxFileExists(dhEmiYear)) {
+			FileInputStream excelFile = new FileInputStream(new File(generateCompletePathToSave(dhEmiYear)));
+			return new XSSFWorkbook(excelFile);
 		} 
 		return new SXSSFWorkbook();
 	}
@@ -95,6 +95,7 @@ public class App {
 		Row row = createNewRow(sheet);	
 		writingCell(row, report.getCnpj(), columnCount++);
 		writingCell(row, report.getxNome(), columnCount++);
+		writingCell(row, report.getNatOp(), columnCount++);
 		writingCell(row, report.getnFat(), columnCount++);
 		writingCell(row, report.getvOrig(), columnCount++);
 		writingCell(row, report.getvDesc(), columnCount++);
@@ -110,6 +111,7 @@ public class App {
 		for (Duplicata duplicata : report.getDuplicatas()) {
 			writingCell(row, report.getCnpj(), columnCount++);
 			writingCell(row, report.getxNome(), columnCount++);
+			writingCell(row, report.getNatOp(), columnCount++);
 			writingCell(row, report.getnFat(), columnCount++);
 			writingCell(row, report.getvOrig(), columnCount++);
 			writingCell(row, report.getvDesc(), columnCount++);
@@ -171,6 +173,7 @@ public class App {
 		List<String> headers = new ArrayList<String>();
 		headers.add("CNPJ");
 		headers.add("NOME");
+		headers.add("OPERAÇÃO");
 		headers.add("FATURA");
 		headers.add("VALOR ORIGINAL");
 		headers.add("VALOR DESCONTO");
@@ -191,7 +194,7 @@ public class App {
 	}
 	
 	private static void setAutoSizeToColumn(Sheet sheet){
-		Row row = sheet.getRow(sheet.getLastRowNum());
+		Row row = sheet.getRow(sheet.getFirstRowNum());
 		for (int i = 0; i <= row.getLastCellNum() -1; i++) {
 			sheet.autoSizeColumn(i);
 		}
@@ -205,8 +208,7 @@ public class App {
 
 	private static void closeWorkBookSession(Workbook workbook) {
 		try {
-		    if (Objects.nonNull(workbook)) 
-		    	workbook.close();
+		    if (Objects.nonNull(workbook)) workbook.close();
 		} catch (IOException e) {
 		   e.printStackTrace();
 		}
