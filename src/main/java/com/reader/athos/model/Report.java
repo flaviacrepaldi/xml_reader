@@ -12,6 +12,7 @@ import java.util.Date;
 public class Report {
 	private static final String DEFAULT_PATTERN_TO_PARSE = "yyyy-MM-dd'T'HH:mm:ssX";
 	
+	private String fileName;
     private String cnpj;
     private Object dhEmi; 
     private Date dateDhEmi;
@@ -186,4 +187,13 @@ public class Report {
 	public void setNatOp(String natOp) {
 		this.natOp = natOp;
 	}
+
+	public String getFileName() {
+		return fileName;
+	}
+
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
+	}
+
 }

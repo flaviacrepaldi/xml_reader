@@ -4,6 +4,7 @@ public class Config {
 	
 	private String targetReportsPath;
 	private String folderPath;
+	private String destinationPath;
 	
 	
 	public String getTargetReportsPath() {
@@ -20,5 +21,13 @@ public class Config {
 	
 	public void setFolderPath(String folderPath) {
 		this.folderPath = folderPath;
+	}
+
+	public String getDestinationPath() {
+		return destinationPath;
+	}
+
+	public void setDestinationPath(String destinationPath) {
+		this.destinationPath = destinationPath;
 	}
 }

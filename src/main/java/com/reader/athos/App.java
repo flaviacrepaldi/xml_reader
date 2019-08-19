@@ -25,15 +25,12 @@ import com.reader.athos.model.Duplicata;
 import com.reader.athos.model.Report;
 import com.reader.athos.service.BuilderConfigProperties;
 import com.reader.athos.service.BuilderReports;
+import com.reader.athos.usecase.MoveReadFilesUseCase;
 
 public class App {	
 	private static Config config;
 	private static final String XML_FILES = "XML_FILES";
 	
-//	private static String folderPath = "/home/flavia/Documents/athos/PLANILHAS";
-//	private static String folderPath = "C:\\Users\\Phelipe\\Desktop\\Teste";
-//	private static String folderPath = "C:\\Users\\phelipe.galiotti\\Desktop\\teste";
-    
     public static void main(String[] args) {
         try{
         	config = BuilderConfigProperties.execute();
@@ -61,14 +58,22 @@ public class App {
 		Workbook workbook = getWorkbook(dhEmiYear);
 		Sheet sheet = getSheet(workbook, dhEmiYear); 
 		int columnCount = 0;
+		int qtdeDeArquivosProcessados = 0;
 		
 		for (Report report : reports) {
 			if (report.hasDuplicatas()) {
+				qtdeDeArquivosProcessados += report.getDuplicatas().size();
+				System.out.println("com DUPLICATA | FileName:" + report.getFileName() +"| qtde:" + report.getDuplicatas().size());
 				insertReportsWithDuplicatas(report, sheet, columnCount);
 			} else {
+				qtdeDeArquivosProcessados++;
+				System.out.println("sem DUPLICATA");
 				insertReports(report, sheet, columnCount);
 			}
 		}
+		
+		System.out.println("quantidade de arquivos processados: " + qtdeDeArquivosProcessados);
+		
 		setAutoSizeToColumn(sheet);
 		
 		writeSpreadsheetWithSameDateOfReport(dhEmiYear, workbook);

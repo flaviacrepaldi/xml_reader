@@ -3,23 +3,25 @@ package com.reader.athos.usecase;
 import java.io.File;
 import java.util.Arrays;
 
-public class MoveReadFilesUseCase {
+import com.reader.athos.model.Config;
+import com.reader.athos.service.BuilderConfigProperties;
 
-	private static final String originReports = "C:\\Users\\Phelipe\\Desktop\\Teste\\BASE XMLs";
-	private static final String destinationReports = "C:\\Users\\Phelipe\\Desktop\\Teste\\LIDOS\\";
+public class MoveReadFilesUseCase {
 
 	public static void execute() {
 		try {
+			Config config = BuilderConfigProperties.execute();
+			
 			System.out.println("Movendo arquivos ja processados");
-			File fileOriginReports = new File(originReports);
-			File fileDestinationReports = new File(destinationReports);
+			File fileOriginReports = new File(config.getTargetReportsPath());
+			File fileDestinationReports = new File(config.getDestinationPath());
 			if(!fileDestinationReports.exists()) {
 				fileDestinationReports.mkdir();
 			}
 			
 			Arrays.asList(fileOriginReports.listFiles()).stream().forEach(file -> { 
 				if (file.isFile()) {
-					file.renameTo(new File(destinationReports + file.getName()));
+					file.renameTo(new File(config.getDestinationPath() + "//" + file.getName()));
 				}
 			});
 

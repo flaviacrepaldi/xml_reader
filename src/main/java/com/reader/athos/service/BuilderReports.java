@@ -52,6 +52,7 @@ public class BuilderReports {
 			    doc.getDocumentElement().normalize();
 			    
 			    Report report = new Report();
+			    report.setFileName(file.getName());
 			    report.setDhEmi(getValueElementsByTagName(doc, IDE, "dhEmi"));
 			    report.setCnpj(getValueElementsByTagName(doc, EMIT, "CNPJ"));
 			    report.setxNome(getValueElementsByTagName(doc, EMIT, "xNome"));
