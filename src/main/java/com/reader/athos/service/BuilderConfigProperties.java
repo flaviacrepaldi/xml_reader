@@ -5,9 +5,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import org.apache.log4j.Logger;
+
 import com.reader.athos.model.Config;
 
 public class BuilderConfigProperties {
+	private final static Logger logger = Logger.getLogger(BuilderConfigProperties.class);
 
 	private static final String DEFAULT_CONFIG_PATH = "C:\\Users\\phelipe.galiotti\\Desktop\\teste\\config\\config.properties";
 	private static final String DEFAULT_DESTINATION_PATH = "C:\\Users\\phelipe.galiotti\\Desktop\\teste\\LIDOS";
@@ -29,6 +32,7 @@ public class BuilderConfigProperties {
 			config.setFolderPath(prop.getProperty("folder.path"));
 			config.setDestinationPath(prop.getProperty("destination.reports.path"));
 		} catch (IOException ex) {
+			logger.error("Falha ao recuperar arquivo de configuracao: " , ex);
 			ex.printStackTrace();
 		}
 		return config;

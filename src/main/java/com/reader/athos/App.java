@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -12,6 +14,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.log4j.Logger;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Row;
@@ -25,18 +28,25 @@ import com.reader.athos.model.Duplicata;
 import com.reader.athos.model.Report;
 import com.reader.athos.service.BuilderConfigProperties;
 import com.reader.athos.service.BuilderReports;
-import com.reader.athos.usecase.MoveReadFilesUseCase;
 
 public class App {	
 	private static Config config;
 	private static final String XML_FILES = "XML_FILES";
+	final static Logger logger = Logger.getLogger(App.class);
 	
     public static void main(String[] args) {
         try{
+        	logger.debug("inicio da execução: " + getNowTime());
+        	
         	config = BuilderConfigProperties.execute();
-        	Map<String, List<Report>> reportsOrderByDhEmiDate = BuilderReports.builderReports(config).stream().collect(Collectors.groupingBy(Report::getYearByDhEmi));
+        	Map<String, List<Report>> reportsOrderByDhEmiDate = BuilderReports
+        			.builderReports(config)
+        			.stream()
+        			.collect(Collectors.groupingBy(Report::getYearByDhEmi));
 
         	System.out.println("Inserindo dados...");
+        	logger.debug("inserindo dados na planilha");
+        	
         	StopWatch monitorWritingExcel = new StopWatch();
         	monitorWritingExcel.start();	
         	for(Entry<String, List<Report>> entry : reportsOrderByDhEmiDate.entrySet()) {
@@ -46,13 +56,23 @@ public class App {
         	}
         	monitorWritingExcel.stop();
         	System.out.println("Tempo de total de escrita: " + monitorWritingExcel.getTime() + "ms");
+        	logger.debug("Tempo de total de escrita: " + monitorWritingExcel.getTime() + "ms");
         	
         	//MoveReadFilesUseCase.execute();
+        	
+        	logger.debug("FIM DA EXECUÇÃO");
+        	System.out.println("FIM DA EXECUÇÃO");
         }catch(Exception e){
+        	logger.error("Erro: " ,e);
             e.printStackTrace();
-        }  
-        System.out.println("FIM DA EXECUÇÃO");
+        }
+        
     }
+
+	private static String getNowTime() {
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd - HH:mm");
+		return formatter.format(new Date());
+	}
 
 	private static void insertReportsToWorkbook(String dhEmiYear, List<Report> reports) throws IOException {
 		Workbook workbook = getWorkbook(dhEmiYear);
@@ -63,17 +83,15 @@ public class App {
 		for (Report report : reports) {
 			if (report.hasDuplicatas()) {
 				qtdeDeArquivosProcessados += report.getDuplicatas().size();
-				System.out.println("com DUPLICATA | FileName:" + report.getFileName() +"| qtde:" + report.getDuplicatas().size());
+				logger.debug("com DUPLICATA|FileName:" + report.getFileName() +"|qtde:" + report.getDuplicatas().size());
 				insertReportsWithDuplicatas(report, sheet, columnCount);
 			} else {
 				qtdeDeArquivosProcessados++;
-				System.out.println("sem DUPLICATA");
+				logger.debug("sem DUPLICATA|FileName:" + report.getFileName());
 				insertReports(report, sheet, columnCount);
 			}
 		}
-		
-		System.out.println("quantidade de arquivos processados: " + qtdeDeArquivosProcessados);
-		
+		logger.debug("quantidade de arquivos processados: " + qtdeDeArquivosProcessados);
 		setAutoSizeToColumn(sheet);
 		
 		writeSpreadsheetWithSameDateOfReport(dhEmiYear, workbook);
@@ -93,7 +111,7 @@ public class App {
 			FileInputStream excelFile = new FileInputStream(new File(generateCompletePathToSave(dhEmiYear)));
 			return new XSSFWorkbook(excelFile);
 		} 
-		return new SXSSFWorkbook();
+		return new XSSFWorkbook();
 	}
 
 	private static void insertReports(Report report, Sheet sheet, int columnCount) {
@@ -140,12 +158,13 @@ public class App {
 				f.createNewFile();
 			}
 
-			 FileOutputStream outputStream = new FileOutputStream(fileCompletePath);
+			 FileOutputStream outputStream = new FileOutputStream(f);
              workbook.write(outputStream);
              outputStream.flush();
              outputStream.close();
-         }catch(Exception ex){
-             System.out.println(ex);
+         }catch(Exception e){
+        	 logger.error("Erro ao escrever na planilha: " , e);
+             System.out.println(e);
          }
 	}
 	
@@ -200,10 +219,11 @@ public class App {
 	
 	private static void setAutoSizeToColumn(Sheet sheet){
 		Row row = sheet.getRow(sheet.getFirstRowNum());
-		for (int i = 0; i <= row.getLastCellNum() -1; i++) {
-			sheet.autoSizeColumn(i);
+		if (Objects.nonNull(row)) {
+			for (int i = 0; i <= row.getLastCellNum() -1; i++) {
+				sheet.autoSizeColumn(i);
+			}
 		}
-		
 	}
 
 	private static Row createNewRow(Sheet sheet) {
@@ -215,6 +235,7 @@ public class App {
 		try {
 		    if (Objects.nonNull(workbook)) workbook.close();
 		} catch (IOException e) {
+			logger.error("Erro: " , e);
 		   e.printStackTrace();
 		}
 	}

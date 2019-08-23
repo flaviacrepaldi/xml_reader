@@ -12,6 +12,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -23,18 +24,16 @@ import com.reader.athos.model.Duplicata;
 import com.reader.athos.model.Report;
 
 public class BuilderReports {
+	private final static Logger logger = Logger.getLogger(BuilderReports.class);
+	
 	private static final String DUP = "dup";
 	private static final String DET_PAG = "detPag";
 	private static final String FAT = "fat";
 	private static final String EMIT = "emit";
 	private static final String IDE = "ide";
-	
-//  private static String reportsPath = "/home/flavia/Documents/athos/BASE XMLs";
-//  private static String reportsPath = "C:\\Users\\Phelipe\\Desktop\\Teste\\BASE XMLs";
-//  private static String reportsPath = "C:\\Users\\phelipe.galiotti\\Desktop\\teste\\BASE XMLs";
-	
-	
+
 	public static List<Report> builderReports(Config config) throws ParserConfigurationException, SAXException, IOException {
+		System.out.println("Iniciando leitura dos xmls");
 		StopWatch monitorExecutionReports = new StopWatch();
     	monitorExecutionReports.start();
 
@@ -72,7 +71,8 @@ public class BuilderReports {
 		});
 		
 		monitorExecutionReports.stop();
-    	System.out.println("Tempo de leitura dos XMLs: " + monitorExecutionReports.getTime() + "ms");
+    	System.out.println("Tempo total de leitura dos XMLs: " + monitorExecutionReports.getTime() + "ms");
+    	logger.debug("Tempo total de leitura dos XMLs:" + monitorExecutionReports.getTime() + "ms");
     	
 		return reports;
 	}
