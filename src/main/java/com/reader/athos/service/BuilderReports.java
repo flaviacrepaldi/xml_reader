@@ -71,8 +71,11 @@ public class BuilderReports {
 		});
 		
 		monitorExecutionReports.stop();
-    	System.out.println("Tempo total de leitura dos XMLs: " + monitorExecutionReports.getTime() + "ms");
-    	logger.debug("Tempo total de leitura dos XMLs:" + monitorExecutionReports.getTime() + "ms");
+		System.out.println("Qtde de arquivos processados: " + reports.size());
+    	logger.debug("Qtde de arquivos processados: " + reports.size());
+    	
+    	System.out.println("Tempo total de leitura dos xmls: " + monitorExecutionReports.getTime() + "ms");
+    	logger.debug("Tempo total de leitura dos xmls:" + monitorExecutionReports.getTime() + "ms");
     	
 		return reports;
 	}

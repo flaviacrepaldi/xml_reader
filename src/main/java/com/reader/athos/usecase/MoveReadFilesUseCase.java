@@ -15,7 +15,7 @@ public class MoveReadFilesUseCase {
 		try {
 			Config config = BuilderConfigProperties.execute();
 			
-			System.out.println("Movendo arquivos ja processados");
+			System.out.println("Movendo arquivos ja processados. Por favor, aguarde");
 			logger.debug("Movendo arquivos ja processados");
 			
 			File fileOriginReports = new File(config.getTargetReportsPath());

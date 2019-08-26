@@ -20,7 +20,6 @@ import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import com.reader.athos.model.Config;
@@ -28,6 +27,7 @@ import com.reader.athos.model.Duplicata;
 import com.reader.athos.model.Report;
 import com.reader.athos.service.BuilderConfigProperties;
 import com.reader.athos.service.BuilderReports;
+import com.reader.athos.usecase.MoveReadFilesUseCase;
 
 public class App {	
 	private static Config config;
@@ -44,24 +44,29 @@ public class App {
         			.stream()
         			.collect(Collectors.groupingBy(Report::getYearByDhEmi));
 
-        	System.out.println("Inserindo dados...");
-        	logger.debug("inserindo dados na planilha");
-        	
-        	StopWatch monitorWritingExcel = new StopWatch();
-        	monitorWritingExcel.start();	
-        	for(Entry<String, List<Report>> entry : reportsOrderByDhEmiDate.entrySet()) {
-        		String dhEmiYear = entry.getKey();
-        		List<Report> reportsByYear = entry.getValue();
-        		insertReportsToWorkbook(dhEmiYear, reportsByYear);
+        	if (reportsOrderByDhEmiDate.isEmpty()) {
+        		System.out.println("Nao ha arquivos a serem processados");
+	        	logger.debug("nao ha arquivos a serem processados");
+        	} else {
+	        	System.out.println("Inserindo dados... Por favor, aguarde");
+	        	logger.debug("inserindo dados");
+	        	
+	        	StopWatch monitorWritingExcel = new StopWatch();
+	        	monitorWritingExcel.start();	
+	        	for(Entry<String, List<Report>> entry : reportsOrderByDhEmiDate.entrySet()) {
+	        		String dhEmiYear = entry.getKey();
+	        		List<Report> reportsByYear = entry.getValue();
+	        		insertReportsToWorkbook(dhEmiYear, reportsByYear);
+	        	}
+	        	monitorWritingExcel.stop();
+	        	System.out.println("Tempo de total de escrita: " + monitorWritingExcel.getTime() + "ms");
+	        	logger.debug("tempo de total de escrita: " + monitorWritingExcel.getTime() + "ms");
+	        	
+	        	MoveReadFilesUseCase.execute();
         	}
-        	monitorWritingExcel.stop();
-        	System.out.println("Tempo de total de escrita: " + monitorWritingExcel.getTime() + "ms");
-        	logger.debug("Tempo de total de escrita: " + monitorWritingExcel.getTime() + "ms");
         	
-        	//MoveReadFilesUseCase.execute();
-        	
-        	logger.debug("FIM DA EXECUÇÃO");
-        	System.out.println("FIM DA EXECUÇÃO");
+        	logger.debug("FIM DA EXECUCAO");
+        	System.out.println("FIM DA EXECUCAO");
         }catch(Exception e){
         	logger.error("Erro: " ,e);
             e.printStackTrace();
@@ -91,7 +96,7 @@ public class App {
 				insertReports(report, sheet, columnCount);
 			}
 		}
-		logger.debug("quantidade de arquivos processados: " + qtdeDeArquivosProcessados);
+		logger.debug("quantidade final de linhas inseridas: " + qtdeDeArquivosProcessados);
 		setAutoSizeToColumn(sheet);
 		
 		writeSpreadsheetWithSameDateOfReport(dhEmiYear, workbook);
@@ -154,6 +159,7 @@ public class App {
 			File f = new File(fileCompletePath);
 			if (! f.exists()) {
 				System.out.println("Criando planilha " + dhEmiDateFormatted + ".xlsx");
+				logger.debug("Criando planilha " + dhEmiDateFormatted + ".xlsx");
 				createHeaders(workbook);
 				f.createNewFile();
 			}
